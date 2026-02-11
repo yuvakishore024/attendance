@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Attendance Manager</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#6366f1">
+
+<style>
+:root{
+  --primary:#6366f1;
+  --accent:#22c55e;
+  --warn:#f59e0b;
+  --danger:#ef4444;
+  --bg:#f4f6fb;
+  --card:#ffffff;
+  --text:#111827;
+  --muted:#6b7280;
+  --empty:#e5e7eb;
+}
+
+body.dark{
+  --bg:#020617;
+  --card:#0b1220;
+  --text:#e5e7eb;
+  --muted:#9ca3af;
+  --empty:#1f2937;
+}
+
+*{box-sizing:border-box;font-family:system-ui}
+
+body{
+  margin:0;
+  background:linear-gradient(135deg,#eef2ff,#f8fafc);
+  color:var(--text);
+  padding:12px;
+  transition:.25s;
+}
+
+body.dark{background:#020617}
+.container{max-width:1400px;margin:auto}
+
+/* ===== PREMIUM HEADER ===== */
+.header{
+  background:linear-gradient(135deg,#6366f1,#818cf8);
+  color:white;
+  padding:16px 18px;
+  border-radius:16px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:14px;
+  box-shadow:0 10px 30px rgba(99,102,241,.35);
+}
+
+.header-actions{display:flex;gap:8px;align-items:center}
+
+/* ===== CARDS ===== */
+.card{
+  background:var(--card);
+  padding:16px;
+  border-radius:18px;
+  margin-bottom:18px;
+  box-shadow:0 8px 25px rgba(0,0,0,.06);
+}
+
+/* ===== BUTTONS WITH HOVER ===== */
+button,input{
+  height:42px;
+  border-radius:12px;
+  border:1px solid #e5e7eb;
+  padding:0 12px;
+  font-size:14px;
+}
+
+button{
+  background:linear-gradient(135deg,#6366f1,#818cf8);
+  color:white;
+  border:none;
+  font-weight:600;
+  cursor:pointer;
+  transition:.18s;
+}
+
+button:hover{
+  transform:translateY(-3px);
+  box-shadow:0 10px 25px rgba(99,102,241,.4);
+}
+
+.reset{background:linear-gradient(135deg,#ef4444,#f87171)}
+.dark-toggle{background:#111827}
+.lock-btn{background:linear-gradient(135deg,#0ea5e9,#38bdf8)}
+.undo-btn{background:linear-gradient(135deg,#64748b,#94a3b8)}
+
+/* ===== ATTENDANCE GRID ===== */
+.attendance{display:flex;border-radius:14px;overflow:hidden}
+.names{min-width:220px;background:var(--card);border-right:1px solid #e5e7eb}
+
+.name-header{height:72px;display:flex;align-items:center;padding:0 12px;font-weight:700;border-bottom:2px solid #e5e7eb}
+.name{height:72px;display:flex;align-items:center;justify-content:space-between;padding:6px 12px;border-bottom:1px solid #e5e7eb;transition:.18s}
+
+.name:hover{background:rgba(99,102,241,.08)}
+
+.name-left{display:flex;flex-direction:column;gap:4px}
+.salary-row{display:flex;gap:6px}
+.salary-input{width:70px;height:30px;font-size:12px;text-align:center}
+
+.delete-btn{background:none;border:none;color:var(--danger);font-size:16px;cursor:pointer}
+
+.dates-wrapper{overflow-x:auto;flex:1}
+.row{display:flex;height:72px}
+
+.header-cell{width:52px;text-align:center;font-weight:700;line-height:72px}
+
+.cell{
+  width:44px;
+  height:44px;
+  margin:14px 3px;
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+  color:white;
+  cursor:pointer;
+  transition:.15s;
+}
+
+.cell:hover{
+  transform:scale(1.12);
+  box-shadow:0 10px 25px rgba(0,0,0,.25);
+}
+
+.present{background:linear-gradient(135deg,#22c55e,#4ade80)}
+.half{background:linear-gradient(135deg,#f59e0b,#fbbf24)}
+.absent{background:linear-gradient(135deg,#ef4444,#f87171)}
+.empty{background:var(--empty);color:transparent}
+
+/* ===== PAYROLL — EXACT PREMIUM VERSION ===== */
+.payroll-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:12px;
+}
+
+.active-pill{
+  background:linear-gradient(135deg,#6366f1,#818cf8);
+  color:white;
+  padding:6px 14px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:600;
+}
+
+.monthly-overview{
+  background:linear-gradient(135deg,#6366f1,#818cf8);
+  color:white;
+  padding:20px;
+  border-radius:16px;
+  margin-bottom:16px;
+  font-weight:600;
+  box-shadow:0 10px 30px rgba(99,102,241,.35);
+}
+
+.summary-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:16px;
+}
+
+.summary-card{
+  background:linear-gradient(135deg,#020617,#0f172a);
+  color:white;
+  padding:18px;
+  border-radius:18px;
+  box-shadow:0 14px 40px rgba(0,0,0,.45);
+  transition:.2s;
+}
+
+.summary-card:hover{
+  transform:translateY(-6px);
+}
+
+.salary{
+  color:#22c55e;
+  font-weight:800;
+  font-size:18px;
+  margin-top:6px;
+}
+
+/* ===== FOOTER ===== */
+.footer{
+  margin-top:18px;
+  padding:12px 16px;
+  border-radius:14px;
+  background:linear-gradient(135deg,#6366f1,#818cf8);
+  color:white;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.footer-buttons{display:flex;gap:8px}
+
+/* ===== LOGIN ===== */
+.lock{position:fixed;inset:0;background:#020617;display:flex;align-items:center;justify-content:center}
+.lock-box{background:white;color:#111827;padding:24px;border-radius:18px;width:90%;max-width:320px}
+</style>
+</head>
+
+<body>
+
+<div id="lock" class="lock">
+  <div class="lock-box">
+    <h3>Admin Login</h3>
+    <input id="password" type="password" placeholder="Password">
+    <button onclick="unlock()">Login</button>
+    <p id="error" style="color:red"></p>
+  </div>
+</div>
+
+<div id="app" class="container" style="display:none">
+
+<div class="header">
+  <h2>📊 Attendance</h2>
+  <div class="header-actions">
+    <button class="dark-toggle" onclick="toggleDark()">🌙</button>
+    <button class="undo-btn" onclick="undoAction()">Undo</button>
+    <button class="lock-btn" onclick="toggleMonthLock()">Lock Month</button>
+    <button class="reset" onclick="resetToday()">Reset</button>
+  </div>
+</div>
+
+<div class="card">
+  <input id="searchInput" placeholder="Search member..." oninput="render()">
+  <input id="nameInput" placeholder="Add member">
+  <button onclick="addMember()">Add</button>
+  <input type="month" id="monthInput" onchange="render()">
+</div>
+
+<div class="card">
+  <label><b>Default Full Day Salary</b></label>
+  <input id="fullSalary" type="number">
+  <label><b>Default Half Day Salary</b></label>
+  <input id="halfSalary" type="number">
+</div>
+
+<div class="card attendance">
+  <div id="names" class="names">
+    <div class="name-header">Name / Salary</div>
+  </div>
+  <div class="dates-wrapper">
+    <div id="dates"></div>
+  </div>
+</div>
+
+<div class="card">
+
+<div class="payroll-header">
+<h3>Payroll Summary</h3>
+<div class="active-pill">Active Month</div>
+</div>
+
+<div id="monthlyOverview" class="monthly-overview"></div>
+<div id="summary" class="summary-grid"></div>
+
+</div>
+
+<div class="footer">
+  <div>⚡ Attendance Manager</div>
+  <div class="footer-buttons">
+      <button onclick="launchConfetti()">🎉 Easter Egg</button>
+  </div>
+</div>
+
+</div>
+
+<script>
+const ADMIN_PASSWORD="Muruganstores";
+
+let members=JSON.parse(localStorage.getItem("members"))||[];
+let attendance=JSON.parse(localStorage.getItem("attendance"))||{};
+let fullSalary=JSON.parse(localStorage.getItem("fullSalary"))||0;
+let halfSalary=JSON.parse(localStorage.getItem("halfSalary"))||0;
+let customSalary=JSON.parse(localStorage.getItem("customSalary"))||{};
+let darkMode=JSON.parse(localStorage.getItem("darkMode"))||false;
+let lockedMonths=JSON.parse(localStorage.getItem("lockedMonths"))||{};
+let lastState=null;
+
+const fullSalaryInput=document.getElementById("fullSalary");
+const halfSalaryInput=document.getElementById("halfSalary");
+
+fullSalaryInput.value=fullSalary;
+halfSalaryInput.value=halfSalary;
+if(darkMode) document.body.classList.add("dark");
+
+function save(){
+localStorage.setItem("members",JSON.stringify(members));
+localStorage.setItem("attendance",JSON.stringify(attendance));
+localStorage.setItem("fullSalary",fullSalary);
+localStorage.setItem("halfSalary",halfSalary);
+localStorage.setItem("customSalary",JSON.stringify(customSalary));
+localStorage.setItem("darkMode",darkMode);
+localStorage.setItem("lockedMonths",JSON.stringify(lockedMonths));
+}
+
+function snapshot(){
+lastState={members:[...members],attendance:JSON.parse(JSON.stringify(attendance))};
+}
+
+function undoAction(){
+if(!lastState) return alert("Nothing to undo");
+members=[...lastState.members];
+attendance=JSON.parse(JSON.stringify(lastState.attendance));
+save();render();
+}
+
+function toggleMonthLock(){
+const m=monthInput.value;
+if(!m) return;
+lockedMonths[m]=!lockedMonths[m];
+save();
+alert(lockedMonths[m]?"Month Locked":"Month Unlocked");
+}
+
+function isLocked(date){return lockedMonths[date.slice(0,7)];}
+
+function toggleDark(){darkMode=!darkMode;document.body.classList.toggle("dark");save();}
+
+function unlock(){
+if(password.value===ADMIN_PASSWORD){
+lock.style.display="none";
+app.style.display="block";
+monthInput.value=new Date().toISOString().slice(0,7);
+render();
+registerSW();
+}else error.innerText="Wrong password";
+}
+
+fullSalaryInput.oninput=()=>{fullSalary=+fullSalaryInput.value||0;save();render()};
+halfSalaryInput.oninput=()=>{halfSalary=+halfSalaryInput.value||0;save();render()};
+
+function addMember(){
+const n=nameInput.value.trim();
+if(!n||members.includes(n))return;
+snapshot();
+members.push(n);
+members.sort((a,b)=>a.localeCompare(b));
+nameInput.value="";
+save();render();
+}
+
+function deleteMember(name){
+snapshot();
+members=members.filter(m=>m!==name);
+Object.keys(attendance).forEach(d=>delete attendance[d][name]);
+save();render();
+}
+
+function getSalary(name,type){return customSalary[name]?.[type] ?? (type==="full"?fullSalary:halfSalary);} 
+function setCustomSalary(name,type,val){if(!customSalary[name])customSalary[name]={};customSalary[name][type]=+val||0;save();render();}
+
+function render(){
+names.innerHTML='<div class="name-header">Name / Salary</div>';
+dates.innerHTML="";
+summary.innerHTML="";
+
+const [y,m]=monthInput.value.split("-");
+const days=new Date(y,m,0).getDate();
+
+let header=document.createElement("div");
+header.className="row";
+for(let d=1;d<=days;d++){
+let h=document.createElement("div");
+h.className="header-cell";
+h.textContent=d;
+header.appendChild(h);
+}
+dates.appendChild(header);
+
+let totalSalary=0,totalFull=0,totalHalf=0,totalAbsent=0;
+
+members.filter(mem=>mem.toLowerCase().includes(searchInput.value.toLowerCase()))
+.forEach(mem=>{
+
+let n=document.createElement("div");
+n.className="name";
+n.innerHTML=`
+<div class="name-left">
+<div class="member-name">${mem}</div>
+<div class="salary-row">
+<input class="salary-input" value="${getSalary(mem,"full")}" onchange="setCustomSalary('${mem}','full',this.value)">
+<input class="salary-input" value="${getSalary(mem,"half")}" onchange="setCustomSalary('${mem}','half',this.value)">
+</div>
+</div>
+<button class="delete-btn" onclick="deleteMember('${mem}')">✕</button>`;
+
+names.appendChild(n);
+
+let row=document.createElement("div");
+row.className="row";
+
+let full=0,half=0,absent=0;
+
+for(let d=1;d<=days;d++){
+const date=`${monthInput.value}-${String(d).padStart(2,'0')}`;
+const st=attendance[date]?.[mem]||"empty";
+
+if(st==="present") full++;
+else if(st==="half") half++;
+else if(st==="absent") absent++;
+
+let c=document.createElement("div");
+c.className=`cell ${st}`;
+c.textContent=st==="present"?"P":st==="half"?"H":st==="absent"?"A":"";
+
+c.onclick=()=>{
+if(isLocked(date)) return alert("Month is locked");
+snapshot();
+if(!attendance[date]) attendance[date]={};
+const order=["empty","present","half","absent"];
+const cur=attendance[date][mem]||"empty";
+const next=order[(order.indexOf(cur)+1)%order.length];
+if(next==="empty") delete attendance[date][mem];
+else attendance[date][mem]=next;
+save();render();
+};
+
+row.appendChild(c);
+}
+
+dates.appendChild(row);
+
+const salary=(full*getSalary(mem,"full"))+(half*getSalary(mem,"half"));
+
+summary.innerHTML+=`
+<div class="summary-card">
+<b>${mem}</b><br>
+Full: ${full} | Half: ${half} | Absent: ${absent}
+<div class="salary">₹${salary}</div>
+<button onclick="generatePayslip('${mem}',${full},${half},${salary})">Payslip</button>
+</div>`;
+
+totalSalary+=salary;
+totalFull+=full;
+totalHalf+=half;
+totalAbsent+=absent;
+});
+
+monthlyOverview.innerHTML=`
+<b>Monthly Overview</b><br>
+Total Present: ${totalFull} | 
+Total Half: ${totalHalf} | 
+Total Absent: ${totalAbsent} | 
+Total Salary: ₹${totalSalary}`;
+}
+
+function generatePayslip(name,full,half,total){
+const w=window.open("","_blank");
+w.document.write(`
+<h2>Payslip</h2>
+<p><b>Name:</b> ${name}</p>
+<p>Full Days: ${full}</p>
+<p>Half Days: ${half}</p>
+<h3>Total Salary: ₹${total}</h3>
+<button onclick="window.print()">Print</button>
+`);
+}
+
+function resetToday(){
+const t=new Date().toISOString().slice(0,10);
+if(confirm("Reset today?")){snapshot();delete attendance[t];save();render();}
+}
+
+function launchConfetti(){alert("🎉 Surprise!");}
+
+function registerSW(){if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}}
+</script>
+
+</body>
+</html>
